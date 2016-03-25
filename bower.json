@@ -1,0 +1,23 @@
+{
+  "name": "shouldistudy",
+  "version": "1.0.0",
+  "moduleType": [
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-console": "^0.1.0",
+    "purescript-flare": "^0.5",
+    "purescript-batteries": "^0.5"
+  },
+  "resolutions": {
+    "purescript-maps": "~0.5.4",
+    "purescript-strings": "~0.7.1",
+    "purescript-canvas": "^0.4.0"
+  }
+}
