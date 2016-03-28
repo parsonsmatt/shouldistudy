@@ -13,11 +13,13 @@
   "dependencies": {
     "purescript-console": "^0.1.0",
     "purescript-flare": "^0.5",
-    "purescript-batteries": "^0.5"
+    "purescript-batteries": "^0.5",
+    "purescript-pux": "^2.0.0"
   },
   "resolutions": {
     "purescript-maps": "~0.5.4",
     "purescript-strings": "~0.7.1",
-    "purescript-canvas": "^0.4.0"
+    "purescript-canvas": "^0.4.0",
+    "purescript-aff": "^0.16.1"
   }
 }

@@ -15,6 +15,9 @@ instance showGrade :: Show n => Show (GradeR n) where
         , " }"
         ]
 
+mkGrade :: forall n. n -> Score n -> GradeR n
+mkGrade n s = GradeR { weight: n, score: s }
+
 instance functorGrade :: Functor GradeR where
     map f (GradeR rs) = GradeR { weight: f rs.weight, score: map f rs.score }
 
