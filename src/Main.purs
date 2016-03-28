@@ -12,4 +12,4 @@ import Study.Pux as Pux
 import Grade
 
 main :: Eff _ Unit
-main = M.ui
+main = M.main

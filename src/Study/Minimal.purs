@@ -1,38 +1,23 @@
 module Study.Minimal where
 
-import Prelude
+import Prelude (Unit, const, flip, bind, unit)
 
-import Data.Array as A
-import Data.Tuple 
-import Pux
+import Pux (renderToDOM, fromSimple, start)
 import Pux.Html as H
-import Pux.Html ((#), (##))
+import Pux.Html ((##))
 import Pux.Html.Events as H
 
+type State = Unit
 
-data State = State Int (Array State)
+data Action = Null
 
-data Action 
-    = Increment 
-    | Child Int Action
+view :: Unit -> H.Html Action
+view u =
+    H.div ## [H.text "Hello", H.text "World"]
 
-mapIndexed :: forall a b. (Int -> a -> b) -> Array a -> Array b
-mapIndexed f xs = map (uncurry f) (A.zip (A.range 0 (A.length xs)) xs)
+initialState = unit
 
-forIndexed = flip mapIndexed
-
-view :: State -> H.Html Action
-view (State count substates) = do
-    H.p # H.text ("Count: " <> show count)
-    H.div ## forIndexed substates \i g -> 
-        H.forwardTo (Child i) (view g)
-  where
-    bind = H.bind
-
-
-initialState = State 0 []
-
-ui = do
+main = do
     app <- start
         { initialState: initialState
         , update: fromSimple (flip const)
