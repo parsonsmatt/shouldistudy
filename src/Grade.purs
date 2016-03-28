@@ -40,14 +40,15 @@ ex = GradeR
     { weight: 1.0
     , score: Average 
         [ GradeR { weight: 0.2, score: Percent 1.0 }
-        , GradeR { weight: 0.8, score: 10.0 `OutOf` 12.0 }
+        , GradeR { weight: 0.4, score: 12.0 `OutOf` 12.0 }
+        , GradeR { weight: 0.4, score: Percent 1.0 }
         ]
     }
 
 getScore :: Score Number -> Number
 getScore (OutOf a b) = a / b
 getScore (Percent n) = n
-getScore (Average grades) = average (map gradeValue grades)
+getScore (Average grades) = sum (map gradeValue grades)
 
 gradeValue :: GradeR Number -> Number
 gradeValue (GradeR grade) = grade.weight * getScore grade.score
