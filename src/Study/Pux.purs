@@ -17,20 +17,21 @@ data Action
     = Child Int Action
     | Null
 
-view :: State -> H.Html Action
-view (GradeR grade) = do
+viewG :: State -> H.Html Action
+viewG (GradeR grade) = do
+    H.p # H.text "Grade Set:"
     H.div # do
-        H.span # H.text ("weight: " ++ show grade.weight)
-        H.span # H.text ("score: " <> show (getScore grade.score))
+        H.p # H.text ("weight: " ++ show grade.weight)
+        H.p # H.text ("score: " <> show (getScore grade.score))
         case grade.score of
              Average gs -> H.div ## do
-                 (flip map) (A.zip gs (A.range 1 $ A.length gs)) \(Tuple g i) -> do
-                     H.forwardTo (Child i) (view g)
+                 mapIndexed (\i g -> H.forwardTo (Child i) (viewG g)) gs
              g -> H.div # H.text (show g)
   where
     bind = H.bind
 
-init = GradeR { weight: 1.0, score: Average [] }
+mapIndexed :: forall a b. (Int -> a -> b) -> Array a -> Array b
+mapIndexed f xs = map (uncurry f) (A.zip (A.range 0 (A.length xs)) xs)
 
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do
@@ -38,7 +39,7 @@ ui = do
         { initialState: ex
         , update: fromSimple (flip const)
         , inputs: []
-        , view: view
+        , view: viewG
         }
 
     renderToDOM "#app" app.html
