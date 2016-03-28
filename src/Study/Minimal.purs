@@ -1,30 +1,32 @@
 module Study.Minimal where
 
-import Prelude hiding ((#))
+import Prelude (Unit, const, flip, unit, bind)
 
 import Pux (renderToDOM, fromSimple, start)
 import Pux.Html as H
-import Pux.Html ((##), (#))
-
-type State = Unit
+import Pux.Html ((#))
 
 data Action = Null
 
-view :: Unit -> H.Html Action
-view u = H.div # do
-    H.p # H.text "hello"
-    H.div ## map H.text ["Hello", "World"]
+view :: Int -> Unit -> H.Html Action
+view i _ = H.p # case i of
+    0 -> do
+        H.text "hello"
+    1 ->
+        H.text "Hello"
+    2 -> H.div # do
+        H.text "hello"
+    3 -> H.div #
+        H.text "hello"
   where
     bind = H.bind
 
-initialState = unit
-
 main = do
     app <- start
-        { initialState: initialState
+        { initialState: unit
         , update: fromSimple (flip const)
         , inputs: []
-        , view: view
+        , view: view 0
         }
 
     renderToDOM "#app" app.html

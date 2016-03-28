@@ -18,7 +18,7 @@ data Action
     | Null
 
 viewG :: State -> H.Html Action
-viewG (GradeR grade) = H.div # do
+viewG (GradeR grade) = H.p # do
     H.p # H.text "Grade Set:"
     H.div # do
         H.p # H.text ("weight: " ++ show grade.weight)
