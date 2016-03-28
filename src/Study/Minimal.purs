@@ -1,19 +1,21 @@
 module Study.Minimal where
 
-import Prelude (Unit, const, flip, bind, unit)
+import Prelude hiding ((#))
 
 import Pux (renderToDOM, fromSimple, start)
 import Pux.Html as H
-import Pux.Html ((##))
-import Pux.Html.Events as H
+import Pux.Html ((##), (#))
 
 type State = Unit
 
 data Action = Null
 
 view :: Unit -> H.Html Action
-view u =
-    H.div ## [H.text "Hello", H.text "World"]
+view u = H.div # do
+    H.p # H.text "hello"
+    H.div ## map H.text ["Hello", "World"]
+  where
+    bind = H.bind
 
 initialState = unit
 

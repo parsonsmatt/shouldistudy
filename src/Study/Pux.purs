@@ -18,20 +18,23 @@ data Action
     | Null
 
 viewG :: State -> H.Html Action
-viewG (GradeR grade) = do
+viewG (GradeR grade) = H.div # do
     H.p # H.text "Grade Set:"
     H.div # do
         H.p # H.text ("weight: " ++ show grade.weight)
         H.p # H.text ("score: " <> show (getScore grade.score))
         case grade.score of
-             Average gs -> H.div ## do
-                 mapIndexed (\i g -> H.forwardTo (Child i) (viewG g)) gs
+             Average gs -> H.div ##
+                 forEachIndexed gs \i g ->
+                     H.forwardTo (Child i) (viewG g)
              g -> H.div # H.text (show g)
   where
     bind = H.bind
 
 mapIndexed :: forall a b. (Int -> a -> b) -> Array a -> Array b
 mapIndexed f xs = map (uncurry f) (A.zip (A.range 0 (A.length xs)) xs)
+
+forEachIndexed = flip mapIndexed
 
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do
