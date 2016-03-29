@@ -17,9 +17,8 @@ instance functorScore :: Functor Score where
     map f (Weighted grades) =
         Weighted (map (\(Tuple a b) -> Tuple (f a) (map f b)) grades)
 
-
 instance showScore :: Show n => Show (Score n) where
-    show (OutOf a b) = "OutOf " <> show a <> show b
+    show (OutOf a b) = "OutOf " <> show a <> " " <> show b
     show (Percent n) = "Percent " <> show n
     show (Average gs) = "Average " <> show gs
     show (Weighted gs) = "Weighted " <> show gs
@@ -28,12 +27,20 @@ isAverage :: forall n. Score n -> Boolean
 isAverage (Average _) = true
 isAverage _ = false
 
+overAverage :: forall a. (Array (Score a) -> Array (Score a)) -> Score a -> Score a
+overAverage f (Average gs) = Average (f gs)
+overAverage _ xs = xs
+
 isWeighted :: forall n. Score n -> Boolean
 isWeighted (Weighted _) = true
 isWeighted _ = false
 
+overWeighted :: forall a. (Array (Tuple a (Score a)) -> Array (Tuple a (Score a))) -> Score a -> Score a
+overWeighted f (Weighted gs) = Weighted (f gs)
+overWeighted _ xs = xs
+
 getScore :: Score Number -> Number
-getScore (OutOf a b) = a / b
+getScore (OutOf a b) = 100.0 * (a / b)
 getScore (Percent n) = n
 getScore (Average grades) = average (map getScore grades)
 getScore (Weighted grades) = g (foldl f (Tuple 0.0 0.0) grades)

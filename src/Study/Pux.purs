@@ -15,7 +15,7 @@ import Pux.Html.Events as E
 import Signal.Channel (CHANNEL)
 import Global as G
 
-import Grade (Grade, Score(Percent, Weighted, Average, OutOf), ex, getScore)
+import Grade
 
 type State = Zipper Grade
 
@@ -30,56 +30,77 @@ data Action
 infixr 9 compose as ..
 
 view :: State -> H.Html Action
-view (Zipper _ g _) = H.div # do
+view s@(Zipper _ g _) = H.div # do
+    H.text (show s)
+    viewGrade g
     H.button ! E.onClick (const Undo) # H.text "Undo"
     H.button ! E.onClick (const Redo) # H.text "Redo"
-    case g of
-         OutOf a b -> H.div # do
-            H.label # do
-                H.text "Points: "
-                H.input
-                    [ A.value (show a)
-                    , A.type_ "number"
-                    , E.onChange (UpdateScore .. (_ `OutOf` b) .. eventNumber)
-                    ] []
-            H.label # do
-                H.text "Out of: "
-                H.input
-                    [ A.value (show b)
-                    , A.type_ "number"
-                    , E.onChange (UpdateScore .. OutOf a .. eventNumber)
-                    ] []
-            H.div # changeType g
-         Percent n -> H.div # do
-            H.label # do
-                H.text "Percent: "
-                H.input 
-                    [ A.value (show n)
-                    , E.onChange (UpdateScore .. Percent .. eventNumber)
-                    ] []
-            H.div # changeType g
-         Weighted grades -> H.div # do
-            H.p # H.text "Weighted Grade Set:"
-            H.ul # do
-                H.li # do
-                    H.div # H.text "finish me"
-            H.div # changeType g
-         Average grades -> H.div # do
-            H.p # H.text "Grade Set:"
-            H.div # changeType g
-            H.ul # do
-                H.li # do
-                    H.p # do
-                        H.span # H.text ("This score: " <> show (getScore (Average grades)))
-                H.li # do
-                    H.div # renderScore grades
+    H.span # changeType g
   where
     bind = H.bind
 
+viewGrade :: Grade -> Html Action
+viewGrade g@(OutOf a b) = H.div # do
+    H.span # changeType g
+    H.label # do
+        H.text "Points: "
+        H.input
+            [ A.value (show a)
+            , A.type_ "number"
+            , E.onChange (UpdateScore .. (_ `OutOf` b) .. eventNumber)
+            ] []
+    H.label # do
+        H.text "Out of: "
+        H.input
+            [ A.value (show b)
+            , A.type_ "number"
+            , E.onChange (UpdateScore .. OutOf a .. eventNumber)
+            ] []
+  where
+    bind = H.bind
+
+viewGrade g@(Percent n) = H.div # do
+    H.span # changeType g
+    H.label # do
+        H.text "Percent: "
+        H.input 
+            [ A.value (show n)
+            , E.onChange (UpdateScore .. Percent .. eventNumber)
+            ] []
+  where
+    bind = H.bind
+
+viewGrade g@(Weighted grades) = H.div # do
+    H.span # changeType g
+    H.p # H.text "Weighted Grade Set:"
+    H.ul # do
+        H.li # H.text ("This score: " <> show (getScore g))
+        H.button ! E.onClick (const AddGrade) # H.text "Add Grade"
+        H.ul ## 
+           forEachIndexed grades \i (Tuple w g) ->
+               H.li # do
+                   H.label # do
+                       H.text "Weight: "
+                       H.input
+                           [ A.value (show w)
+                           , E.onChange (UpdateWeight i .. eventNumber)
+                           ] []
+                   H.forwardTo (Child i) (viewGrade g)
+  where
+    bind = H.bind
+                  
+viewGrade g@(Average grades) = H.div # do
+    H.p # H.text "Grade Set:"
+    H.ul # do
+        H.li # H.text ("This score: " <> show (getScore g))
+        H.li # do
+            H.div # renderScore grades
+  where
+    bind = H.bind
 
 emptyScore :: String -> Score Number
 emptyScore string
-  | string == "Percent" = Percent 1.0
+  | string == "Percent" = Percent 100.0
   | string == "OutOf" = OutOf 10.0 10.0
   | string == "Average" = Average []
   | string == "Weighted" = Weighted []
@@ -90,7 +111,7 @@ renderScore gs = H.div # do
      H.button ! E.onClick (const AddGrade) # H.text "Add Grade"
      H.ul ## 
         forEachIndexed gs \i g ->
-            H.li # (H.forwardTo (Child i) (view (single g)))
+            H.li # (H.forwardTo (Child i) (viewGrade g))
   where
     bind = H.bind
 
@@ -122,6 +143,12 @@ eventNumber o = G.readFloat o.target.value
 
 pushPast :: forall a. a -> Zipper a -> Zipper a
 pushPast a (Zipper p c f) = Zipper (c:p) a f
+
+editToPast :: forall a. (a -> a) -> Zipper a -> Zipper a
+editToPast g (Zipper p a f) = Zipper (a : p) (g a) f
+
+editFocus :: forall a. (a -> a) -> Zipper a -> Zipper a
+editFocus g (Zipper p a f) = Zipper p (g a) f
 
 update :: Action -> State -> State
 update Redo state = fromMaybe state $ down state
