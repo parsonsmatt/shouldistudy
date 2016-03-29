@@ -1,32 +1,38 @@
 module Study.Minimal where
 
-import Prelude (Unit, const, flip, unit, bind)
+import Prelude (Unit, bind, const, show, (++), (-), (+))
+
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Exception (EXCEPTION)
+import Signal.Channel (CHANNEL)
 
 import Pux (renderToDOM, fromSimple, start)
-import Pux.Html as H
-import Pux.Html ((#))
+import Pux.Html (Html, text, (#), button, (!), span, div)
+import Pux.Html.Events (onClick)
 
-data Action = Null
+data Action = Increment | Decrement
 
-view :: Int -> Unit -> H.Html Action
-view i _ = H.p # case i of
-    0 -> do
-        H.text "hello"
-    1 ->
-        H.text "Hello"
-    2 -> H.div # do
-        H.text "hello"
-    3 -> H.div #
-        H.text "hello"
-  where
-    bind = H.bind
+type State = Int
 
+update :: Action -> State -> State
+update Increment count = count + 1
+update Decrement count = count - 1
+
+view :: State -> Html Action
+view count =
+  div # do
+    button ! onClick (const Increment) # text "Increment"
+    span # text ("Counter: " ++ show count)
+    button ! onClick (const Decrement) # text "Decrement"
+  where bind = Pux.Html.bind
+
+main :: forall e. Eff (err :: EXCEPTION, channel :: CHANNEL | e) Unit
 main = do
-    app <- start
-        { initialState: unit
-        , update: fromSimple (flip const)
-        , inputs: []
-        , view: view 0
-        }
+  app <- start
+    { initialState: 0
+    , update: fromSimple update
+    , view: view
+    , inputs: []
+    }
 
-    renderToDOM "#app" app.html
+  renderToDOM "#app" app.html

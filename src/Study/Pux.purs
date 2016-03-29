@@ -2,6 +2,7 @@ module Study.Pux where
 
 import Batteries hiding ((#))
 import Data.Array as Arr
+import Data.List
 
 import Pux (renderToDOM, fromSimple, start)
 import Pux.Html (Html)
@@ -14,63 +15,63 @@ import Global as G
 
 import Grade (Grade, Score(Percent, Weighted, Average, OutOf), ex, getScore)
 
-type State = Grade
+type State = List Grade
 
 data Action
     = Child Int Action
     | UpdateWeight Int Number
     | UpdateScore (Score Number)
     | AddGrade
+    | Undo
 
 infixr 9 compose as ..
 
 view :: State -> H.Html Action
-view (OutOf a b) = H.div # do
-    H.label # do
-        H.text "Points: "
-        H.input
-            [ A.value (show a)
-            , A.type_ "number"
-            , E.onChange (UpdateScore .. (`OutOf` b) .. eventNumber)
-            ] []
-    H.label # do
-        H.text "Out of: "
-        H.input
-            [ A.value (show b)
-            , A.type_ "number"
-            , E.onChange (UpdateScore .. OutOf a .. eventNumber)
-            ] []
+view (Cons g past) = H.div # do
+    H.button ! E.onClick (const Undo) # H.text "Undo"
+    case g of
+         OutOf a b -> H.div # do
+            H.label # do
+                H.text "Points: "
+                H.input
+                    [ A.value (show a)
+                    , A.type_ "number"
+                    , E.onChange (UpdateScore .. (`OutOf` b) .. eventNumber)
+                    ] []
+            H.label # do
+                H.text "Out of: "
+                H.input
+                    [ A.value (show b)
+                    , A.type_ "number"
+                    , E.onChange (UpdateScore .. OutOf a .. eventNumber)
+                    ] []
+            H.div # changeType g
+         Percent n -> H.div # do
+            H.label # do
+                H.text "Percent: "
+                H.input 
+                    [ A.value (show n)
+                    , E.onChange (UpdateScore .. Percent .. eventNumber)
+                    ] []
+            H.div # changeType g
+         Weighted grades -> H.div # do
+            H.p # H.text "Weighted Grade Set:"
+            H.ul # do
+                H.li # do
+                    H.div # H.text "finish me"
+            H.div # changeType g
+         Average grades -> H.div # do
+            H.p # H.text "Grade Set:"
+            H.div # changeType g
+            H.ul # do
+                H.li # do
+                    H.p # do
+                        H.span # H.text ("This score: " <> show (getScore (Average grades)))
+                H.li # do
+                    H.div # renderScore grades
   where
     bind = H.bind
 
-view (Percent n) = do
-    H.label # do
-        H.text "Percent: "
-        H.input 
-            [ A.value (show n)
-            , E.onChange (UpdateScore .. Percent .. eventNumber)
-            ] []
-  where
-    bind = H.bind
-
-view (Weighted grades) = H.div # do
-    H.p # H.text "Weighted Grade Set:"
-    H.ul # do
-        H.li # do
-            H.div # H.text "finish me"
-  where
-    bind = H.bind
-
-view (Average grades) = H.div # do
-    H.p # H.text "Grade Set:"
-    H.ul # do
-        H.li # do
-            H.p # do
-                H.span # H.text ("This score: " <> show (getScore (Average grades)))
-        H.li # do
-            H.div # renderScore grades
-  where
-    bind = H.bind
 
 emptyScore :: String -> Score Number
 emptyScore string
@@ -81,11 +82,11 @@ emptyScore string
   | otherwise = Average []
   
 renderScore :: Array (Score Number) -> Html Action
-renderScore gs = do
+renderScore gs = H.div # do
      H.button ! E.onClick (const AddGrade) # H.text "Add Grade"
      H.ul ## 
         forEachIndexed gs \i g ->
-            H.li # (H.forwardTo (Child i) (view g))
+            H.li # (H.forwardTo (Child i) (view (pure g)))
   where
     bind = H.bind
 
@@ -95,39 +96,53 @@ scoreToLabel s =
          OutOf _ _ -> "OutOf"
          Percent _ -> "Percent"
          Average _ -> "Average"
+         Weighted _ -> "Weighted"
 
 
-changeType :: String -> Html Action
-changeType value = H.label # do
+changeType :: Grade -> Html Action
+changeType grade = H.label # do
     H.text "Change Type: "
     H.select
-        ! A.value value 
+        ! A.value (scoreToLabel grade)
         ! E.onChange (\o -> UpdateScore (emptyScore o.target.value)) 
-        ## forEach ["OutOf", "Percent", "Average"] \label ->
+        ## forEach ["OutOf", "Percent", "Average", "Weighted"] \label ->
                H.option ! A.value label # H.text label
   where
     bind = H.bind
 
+eventNumber :: forall r t. { target :: { value :: String | r } | t } -> Number
 eventNumber o = G.readFloat o.target.value
 
 update :: Action -> State -> State
-update (UpdateWeight i n) grades =
+update Undo state = drop 1 state
+update (UpdateWeight i n) state@(Cons grades rest) =
     case grades of
-         Weighted gs -> Weighted (modMaybe i (\(Tuple w s) -> Tuple n s) gs)
-         _ -> grades
-update (Child i a) grades =
-    let mm = modMaybe i (update a)
-     in case grades of
-         Average gs -> Average (modMaybe i (update a) gs)
-         Weighted gs -> Weighted (modMaybe i (map (update a)) gs)
-         g -> g
-update (UpdateScore s) score =
-    s
-update AddGrade grades =
+         Weighted gs ->
+            Weighted (modMaybe i (\(Tuple w s) -> Tuple n s) gs) : state
+         _ ->
+            state
+update (Child i a) state@(Cons grades rest) =
     case grades of
-         Average gs -> Average (gs `Arr.snoc` Percent 1.0) 
-         Weighted gs -> Weighted (gs `Arr.snoc` Tuple 1.0 (Percent 1.0))
-         _ -> grades
+         Average gs ->
+            Average (fromMaybe gs .. traverse head .. modMaybe i (update a) .. map pure $ gs) : rest
+         Weighted gs ->
+            Weighted (fromMaybe gs
+                     .. traverse (traverse head)
+                     .. modMaybe i (map (update a)) 
+                     .. map (map pure)
+                     $ gs) : state
+         g ->
+             state
+update (UpdateScore s) state =
+    s : state
+update AddGrade state@(Cons grades rest) =
+    case grades of
+         Average gs ->
+             Average (gs `Arr.snoc` Percent 1.0)  : state
+         Weighted gs ->
+            Weighted (gs `Arr.snoc` Tuple 1.0 (Percent 1.0)) : state
+         _ ->
+            state
 
 modMaybe :: forall a. Int -> (a -> a) -> Array a -> Array a
 modMaybe i f xs = fromMaybe xs (Arr.modifyAt i f xs)
@@ -144,7 +159,7 @@ forEach = flip map
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do
     app <- start
-        { initialState: ex
+        { initialState: Cons ex Nil
         , update: fromSimple update
         , inputs: []
         , view: view
