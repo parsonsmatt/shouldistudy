@@ -2,9 +2,9 @@ module Study.Pux where
 
 import Batteries hiding ((#))
 import Data.Array as Arr
-import Data.List
+import Data.List (List(Nil), (:))
 
-import Data.List.Zipper
+import Data.List.Zipper (Zipper(Zipper), up, down)
 
 import Pux (renderToDOM, fromSimple, start)
 import Pux.Html (Html)
@@ -40,7 +40,7 @@ view (Zipper _ g _) = H.div # do
                 H.input
                     [ A.value (show a)
                     , A.type_ "number"
-                    , E.onChange (UpdateScore .. (`OutOf` b) .. eventNumber)
+                    , E.onChange (UpdateScore .. (_ `OutOf` b) .. eventNumber)
                     ] []
             H.label # do
                 H.text "Out of: "
@@ -114,6 +114,7 @@ changeType grade = H.label # do
   where
     bind = H.bind
 
+single :: forall a. a -> Zipper a
 single a = Zipper Nil a Nil
 
 eventNumber :: forall r t. { target :: { value :: String | r } | t } -> Number

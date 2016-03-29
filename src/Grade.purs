@@ -3,7 +3,6 @@ module Grade where
 import Batteries
 
 import Data.Array as A
-import Optic.Core
 
 data Score n
     = OutOf n n
