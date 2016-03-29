@@ -4,6 +4,8 @@ import Batteries hiding ((#))
 import Data.Array as Arr
 import Data.List
 
+import Data.List.Zipper
+
 import Pux (renderToDOM, fromSimple, start)
 import Pux.Html (Html)
 import Pux.Html as H
@@ -15,7 +17,7 @@ import Global as G
 
 import Grade (Grade, Score(Percent, Weighted, Average, OutOf), ex, getScore)
 
-type State = List Grade
+type State = Zipper Grade
 
 data Action
     = Child Int Action
@@ -23,14 +25,14 @@ data Action
     | UpdateScore (Score Number)
     | AddGrade
     | Undo
+    | Redo
 
 infixr 9 compose as ..
 
 view :: State -> H.Html Action
-view Nil = H.div # do
-     H.button ! E.onClick (const AddGrade) # H.text "Add Grade"
-view (Cons g past) = H.div # do
+view (Zipper _ g _) = H.div # do
     H.button ! E.onClick (const Undo) # H.text "Undo"
+    H.button ! E.onClick (const Redo) # H.text "Redo"
     case g of
          OutOf a b -> H.div # do
             H.label # do
@@ -88,7 +90,7 @@ renderScore gs = H.div # do
      H.button ! E.onClick (const AddGrade) # H.text "Add Grade"
      H.ul ## 
         forEachIndexed gs \i g ->
-            H.li # (H.forwardTo (Child i) (view (pure g)))
+            H.li # (H.forwardTo (Child i) (view (single g)))
   where
     bind = H.bind
 
@@ -112,37 +114,46 @@ changeType grade = H.label # do
   where
     bind = H.bind
 
+single a = Zipper Nil a Nil
+
 eventNumber :: forall r t. { target :: { value :: String | r } | t } -> Number
 eventNumber o = G.readFloat o.target.value
 
+pushPast :: forall a. a -> Zipper a -> Zipper a
+pushPast a (Zipper p c f) = Zipper (c:p) a f
+
 update :: Action -> State -> State
-update Undo state = drop 1 state
+update Redo state = fromMaybe state $ down state
+update Undo state = fromMaybe state $ up state
 update (UpdateWeight i n) state =
     case state of
-         Cons (Weighted gs) _ ->
-            Weighted (modMaybe i (\(Tuple w s) -> Tuple n s) gs) : state
+         Zipper _ (Weighted gs) _ ->
+            pushPast (Weighted (modMaybe i (\(Tuple w s) -> Tuple n s) gs)) state
          _ ->
             state
 update (Child i a) state =
     case state of
-         Cons (Average gs) _ ->
-            Average (fromMaybe gs .. traverse head .. modMaybe i (update a) .. map pure $ gs) : state
-         Cons (Weighted gs) _ ->
-            Weighted (fromMaybe gs
-                     .. traverse (traverse head)
-                     .. modMaybe i (map (update a)) 
-                     .. map (map pure)
-                     $ gs) : state
+         Zipper _ (Average gs) _ ->
+            pushPast 
+                (Average (map extract .. modMaybe i (update a) .. map single $ gs))
+                state
+         Zipper _ (Weighted gs) _ ->
+            pushPast
+                (Weighted (map (map extract)
+                         .. modMaybe i (map (update a)) 
+                         .. map (map single)
+                         $ gs))
+                state
          g ->
              state
 update (UpdateScore s) state =
-    s : state
+    pushPast s state
 update AddGrade state =
     case state of
-         Cons (Average gs) _ ->
-             Average (gs `Arr.snoc` Percent 1.0)  : state
-         Cons (Weighted gs) _ ->
-            Weighted (gs `Arr.snoc` Tuple 1.0 (Percent 1.0)) : state
+         Zipper _ (Average gs) _ ->
+             pushPast (Average (gs `Arr.snoc` Percent 1.0)) state
+         Zipper _ (Weighted gs) _ ->
+            pushPast (Weighted (gs `Arr.snoc` Tuple 1.0 (Percent 1.0))) state
          _ ->
             state
 
@@ -161,7 +172,7 @@ forEach = flip map
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do
     app <- start
-        { initialState: Cons ex Nil
+        { initialState: Zipper Nil ex Nil
         , update: fromSimple update
         , inputs: []
         , view: view
