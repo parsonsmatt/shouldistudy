@@ -27,6 +27,8 @@ data Action
 infixr 9 compose as ..
 
 view :: State -> H.Html Action
+view Nil = H.div # do
+     H.button ! E.onClick (const AddGrade) # H.text "Add Grade"
 view (Cons g past) = H.div # do
     H.button ! E.onClick (const Undo) # H.text "Undo"
     case g of
@@ -115,17 +117,17 @@ eventNumber o = G.readFloat o.target.value
 
 update :: Action -> State -> State
 update Undo state = drop 1 state
-update (UpdateWeight i n) state@(Cons grades rest) =
-    case grades of
-         Weighted gs ->
+update (UpdateWeight i n) state =
+    case state of
+         Cons (Weighted gs) _ ->
             Weighted (modMaybe i (\(Tuple w s) -> Tuple n s) gs) : state
          _ ->
             state
-update (Child i a) state@(Cons grades rest) =
-    case grades of
-         Average gs ->
-            Average (fromMaybe gs .. traverse head .. modMaybe i (update a) .. map pure $ gs) : rest
-         Weighted gs ->
+update (Child i a) state =
+    case state of
+         Cons (Average gs) _ ->
+            Average (fromMaybe gs .. traverse head .. modMaybe i (update a) .. map pure $ gs) : state
+         Cons (Weighted gs) _ ->
             Weighted (fromMaybe gs
                      .. traverse (traverse head)
                      .. modMaybe i (map (update a)) 
@@ -135,11 +137,11 @@ update (Child i a) state@(Cons grades rest) =
              state
 update (UpdateScore s) state =
     s : state
-update AddGrade state@(Cons grades rest) =
-    case grades of
-         Average gs ->
+update AddGrade state =
+    case state of
+         Cons (Average gs) _ ->
              Average (gs `Arr.snoc` Percent 1.0)  : state
-         Weighted gs ->
+         Cons (Weighted gs) _ ->
             Weighted (gs `Arr.snoc` Tuple 1.0 (Percent 1.0)) : state
          _ ->
             state
