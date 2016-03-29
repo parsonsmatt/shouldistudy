@@ -3,61 +3,59 @@ module Grade where
 import Batteries
 
 import Data.Array as A
-
-newtype GradeR n = GradeR { weight :: n, score :: Score n }
-
-instance showGrade :: Show n => Show (GradeR n) where
-    show (GradeR n) = fold
-        [ "GradeR { weight: "
-        , show n.weight
-        , ", score: "
-        , show n.score
-        , " }"
-        ]
-
-mkGrade :: forall n. n -> Score n -> GradeR n
-mkGrade n s = GradeR { weight: n, score: s }
-
-instance functorGrade :: Functor GradeR where
-    map f (GradeR rs) = GradeR { weight: f rs.weight, score: map f rs.score }
+import Optic.Core
 
 data Score n
     = OutOf n n
     | Percent n
-    | Average (Array (GradeR n))
+    | Average (Array (Score n))
+    | Weighted (Array (Tuple n (Score n)))
 
 instance functorScore :: Functor Score where
     map f (OutOf a b) = OutOf (f a) (f b)
     map f (Percent n) = Percent (f n)
     map f (Average grades) = Average (map (map f) grades)
+    map f (Weighted grades) =
+        Weighted (map (\(Tuple a b) -> Tuple (f a) (map f b)) grades)
+
 
 instance showScore :: Show n => Show (Score n) where
     show (OutOf a b) = "OutOf " <> show a <> show b
     show (Percent n) = "Percent " <> show n
     show (Average gs) = "Average " <> show gs
+    show (Weighted gs) = "Weighted " <> show gs
 
-type Grade = GradeR Number
+isAverage :: forall n. Score n -> Boolean
+isAverage (Average _) = true
+isAverage _ = false
 
-ex :: Grade
-ex = GradeR
-    { weight: 1.0
-    , score: Average 
-        [ GradeR { weight: 0.2, score: Percent 1.0 }
-        , GradeR { weight: 0.4, score: 12.0 `OutOf` 12.0 }
-        , GradeR { weight: 0.4, score: Percent 1.0 }
-        ]
-    }
+isWeighted :: forall n. Score n -> Boolean
+isWeighted (Weighted _) = true
+isWeighted _ = false
 
 getScore :: Score Number -> Number
 getScore (OutOf a b) = a / b
 getScore (Percent n) = n
-getScore (Average grades) = sum (map gradeValue grades)
-
-gradeValue :: GradeR Number -> Number
-gradeValue (GradeR grade) = grade.weight * getScore grade.score
+getScore (Average grades) = average (map getScore grades)
+getScore (Weighted grades) = g (foldl f (Tuple 0.0 0.0) grades)
+  where
+    f (Tuple accWeight accTotal) (Tuple weight score) =
+        Tuple (accWeight + weight) (weight * (getScore score) + accTotal)
+    g (Tuple weight score) =
+        score / weight
 
 
 average :: Array Number -> Number
 average fs = if l == 0 then 0.0 else sum fs / toNumber l
   where
     l = A.length fs
+
+type Grade = Score Number
+
+ex :: Grade
+ex = Average
+    [ Percent 1.0
+    , 12.0 `OutOf` 12.0
+    , Percent 1.0
+    ]
+
