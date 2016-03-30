@@ -63,5 +63,23 @@ ex = Average
     [ Percent 1.0
     , 12.0 `OutOf` 12.0
     , Percent 1.0
+    , Average [ Percent 1.0, Percent 2.0 ]
     ]
+
+emptyScore :: String -> Score Number
+emptyScore string
+  | string == "Percent" = Percent 100.0
+  | string == "OutOf" = OutOf 10.0 10.0
+  | string == "Average" = Average []
+  | string == "Weighted" = Weighted []
+  | otherwise = Average []
+  
+
+scoreToLabel :: forall a. Score a -> String
+scoreToLabel s =
+    case s of
+         OutOf _ _ -> "OutOf"
+         Percent _ -> "Percent"
+         Average _ -> "Average"
+         Weighted _ -> "Weighted"
 

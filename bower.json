@@ -16,7 +16,8 @@
     "purescript-batteries": "^0.5",
     "purescript-pux": "^2.0.0",
     "purescript-globals": "^0.2.2",
-    "purescript-list-zipper": "^0.0.0"
+    "purescript-list-zipper": "^0.0.0",
+    "purescript-debug": "^0.1.3"
   },
   "resolutions": {
     "purescript-maps": "~0.5.4",
