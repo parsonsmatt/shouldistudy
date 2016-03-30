@@ -39,7 +39,7 @@ button' t a = button ! onClick a ! className "btn btn-default" # text t
 
 title :: Grade -> String -> Html Action
 title g t = 
-    div ! className "title" # do
+    div ! className "title row" # do
         div ! className "col-sm-8" # do
             h2 # text t
         div ! className "col-sm-4" # do
@@ -47,7 +47,7 @@ title g t =
                 text .. show .. getScore $ g
 
 title' a g =
-    div ! className "title" # do
+    div ! className "title row" # do
         div ! className "col-sm-8" # do
             a
         div ! className "col-sm-4" # do
@@ -55,7 +55,7 @@ title' a g =
                 text .. show .. getScore $ g
 
 viewGrade :: Grade -> Html Action
-viewGrade g@(Weighted grades) = div # do
+viewGrade g@(Weighted grades) = div ! className "grade-set" # do
     title g "Weighted Grade Set"
     actionDiv g
     button' "Add Grade" \_ -> AddGrade
@@ -72,7 +72,7 @@ viewGrade g@(Weighted grades) = div # do
                        ] []
                forwardTo (Child i) (viewGrade g)
                   
-viewGrade g@(Average grades) = div ! className "average" # do
+viewGrade g@(Average grades) = div ! className "grade-set" # do
     title g "Grade Set"
     actionDiv g
     button' "Add Grade" \_ -> AddGrade
@@ -109,6 +109,7 @@ viewGrade g@(Percent n) = div ! className "form-inline" # do
                     , className "form-control"
                     ] []
     title' a g 
+    actionDiv g
 
 
 changeType :: Grade -> Html Action

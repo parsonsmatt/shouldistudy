@@ -14,7 +14,7 @@
     "purescript-console": "^0.1.0",
     "purescript-flare": "^0.5",
     "purescript-batteries": "^0.5",
-    "purescript-pux": "^2.0.0",
+    "purescript-pux": "^2.0.1",
     "purescript-globals": "^0.2.2",
     "purescript-list-zipper": "^0.0.0",
     "purescript-debug": "^0.1.3"
