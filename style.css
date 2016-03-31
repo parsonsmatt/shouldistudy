@@ -6,8 +6,13 @@ div.grade-set {
     background: rgba(0,0,0, 0.1);
 }
 
-li:nth-child(even) {
+ul:nth-child(even) {
     background: rgba(0,0,128, 0.1);
+}
+
+li {
+    padding: 0.2em;
+    margin: 0.2em;
 }
 
 h1 {

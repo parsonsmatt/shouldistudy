@@ -26,10 +26,10 @@ update Redo state = fromMaybe state $ down state
 update Undo state = fromMaybe state $ up state
 update act state = editToPast (updateGrade act) state
 
-updateGrade :: Action -> Grade -> Grade
+updateGrade :: Action -> Score String -> Score String
 updateGrade AddGrade =
-    overAverage (_ `Arr.snoc` Percent 1.0)
-    .. overWeighted (_ `Arr.snoc` Tuple 1.0 (Percent 1.0)) 
+    overAverage (_ `Arr.snoc` Percent "1.0")
+    .. overWeighted (_ `Arr.snoc` Tuple "1.0" (Percent "1.0")) 
 updateGrade (Child i a) =
     overAverage (modMaybe i (updateGrade a)) 
     .. overWeighted (modMaybe i (map (updateGrade a)))
@@ -43,7 +43,7 @@ updateGrade Redo = id
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do
     app <- start
-        { initialState: Zipper Nil ex Nil
+        { initialState: Zipper Nil (map show ex) Nil
         , update: fromSimple update
         , inputs: []
         , view: view
