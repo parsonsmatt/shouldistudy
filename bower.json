@@ -16,7 +16,7 @@
     "purescript-batteries": "^0.5",
     "purescript-pux": "^2.0.1",
     "purescript-globals": "^0.2.2",
-    "purescript-list-zipper": "^0.0.0",
+    "purescript-list-zipper": "https://github.com/DavidHarrison/purescript-list-zipper.git#889f1e",
     "purescript-debug": "^0.1.3"
   },
   "resolutions": {
