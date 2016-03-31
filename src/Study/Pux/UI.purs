@@ -1,12 +1,13 @@
 module Study.Pux.UI where
 
-import Batteries (class Show, class Functor, (..), show, ($), (<>), extract)
+import Batteries (class Show, class Functor, map, (..), fst, show, ($), (<>), extract, Tuple(Tuple), for, sum)
 
+import Data.Maybe (Maybe(Just, Nothing))
 import Data.Foldable (intercalate)
 import Data.List.Zipper (Zipper(Zipper))
 import Global as G
 
-import Pux.Html hiding (style)
+import Pux.Html hiding (style, map)
 import Pux.Html.Attributes hiding (label)
 import Pux.Html.Events (onChange, onClick)
 
@@ -62,26 +63,77 @@ button' t a = button ! onClick a ! className "btn btn-default" # text t
 
 viewGrade :: Score String -> Html Action
 viewGrade g@(Weighted grades) = baseDiv # do
-     actionDiv g
---     button' "Add Score String" \_ -> AddGrade
---     ul ! className "list-unstyled" ## 
---        forEachIndexed grades \i (Tuple w g) ->
---            li ! className "" # do
---                label # do
---                    text "Weight: "
---                    input
---                        [ value (show w)
---                        , type_ "number"
---                        , onChange (UpdateWeight i .. targetValue)
---                        , className "form-control"
---                        ] []
---                forwardTo (Child i) (viewGrade g)
---                   
+    setHeader g
+
+    h2 # do
+        let str = ("Total Weight " <>) .. show .. sum .. map (G.readFloat .. fst) $ grades
+        text str
+
+    ul ! className "list-unstyled" ## 
+       forEachIndexed grades \i (Tuple w g) ->
+           li # do
+               div ! className "container-fluid" # do
+                   div ! className "row" # do
+                       div' Xs 2 # do
+                           label # do
+                               text "Weight: "
+                               input
+                                   ! value w
+                                   ! type_ "number"
+                                   ! onChange (UpdateWeight i .. targetValue)
+                                   ! className "form-control"
+                                   ## []
+                       div' Xs 10 # do 
+                           forwardTo (Child i) (viewGrade g)
+                  
 viewGrade gr@(Average grades) = baseDiv # do
+    setHeader gr
+
+    ul ! className "list-unstyled" ## forEachIndexed grades \i g ->
+        li # forwardTo (Child i) (viewGrade g)
+
+viewGrade g@(OutOf a b) = baseDiv # do
+    gradeEdit g ! className "container-fluid" # do
+        div ! className "row" # do
+            div' Xs 6 # do
+                label # do
+                    text "Points: "
+                    input
+                        ! value a
+                        ! type_ "number"
+                        ! onChange (UpdateScore .. (_ `OutOf` b) .. targetValue)
+                        ! className "form-control"
+                        ## []
+            div' Xs 6 # do
+                label # do
+                    text "Out of: "
+                    input
+                        ! value b
+                        ! type_ "number"
+                        ! onChange (UpdateScore .. OutOf a .. targetValue)
+                        ! className "form-control"
+                        ## []
+
+viewGrade g@(Percent n) = baseDiv # do
+    gradeEdit g # do
+        label # do
+            text "Percent: "
+            div ! className "input-group" # do
+                input 
+                    ! value n
+                    ! type_ "number"
+                    ! onChange (UpdateScore .. Percent .. targetValue)
+                    ! className " form-control"
+                    ## []
+                div ! className "input-group-addon" # do
+                    text "%"
+
+setHeader gr = 
     div ! className "row" # do
         div' Sm 8 # do
             h2 # text "Grade Set"
             button' "Add Grade" \_ -> AddGrade
+            button' "Remove" \_ -> Remove
             undoRedo
         div' Sm 4 # do
             div ! className "container-fluid" # do
@@ -97,46 +149,15 @@ viewGrade gr@(Average grades) = baseDiv # do
                     divXs 6 # do
                         changeType gr
 
-    ul ! className "list-unstyled" ## forEachIndexed grades \i g ->
-        li # forwardTo (Child i) (viewGrade g)
-
-viewGrade g@(OutOf a b) = baseDiv # do
-    gradeEdit g # do
-        label # do
-            text "Points: "
-            input
-                ! value a
-                ! type_ "number"
-                ! onChange (UpdateScore .. (_ `OutOf` b) .. targetValue)
-                ! className "form-control"
-                ## []
-        label # do
-            text "Out of: "
-            input
-                ! value b
-                ! type_ "number"
-                ! onChange (UpdateScore .. OutOf a .. targetValue)
-                ! className "form-control"
-                ## []
-
-viewGrade g@(Percent n) = baseDiv # do
-    gradeEdit g # do
-        label # do
-            text "Percent: "
-            input 
-                ! value n
-                ! type_ "number"
-                ! onChange (UpdateScore .. Percent .. targetValue)
-                ! className "form-control"
-                ## []
-
+gradeEdit :: _
 gradeEdit g attrs elem = 
     div ! className "row" # do
-        divXs 8 # do
+        divXs 6 # do
             div attrs elem
-        divXs 4 # do
-            changeType g
-            button' "Remove" \_ -> Remove
+        divXs 6 # do
+            div ! className "text-center" # do
+                changeType g
+                button' "Remove" \_ -> Remove
 
 baseDiv :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 baseDiv attrs elems =

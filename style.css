@@ -6,8 +6,15 @@ div.grade-set {
     background: rgba(0,0,0, 0.1);
 }
 
-ul:nth-child(even) {
-    background: rgba(0,0,128, 0.1);
+ul {
+    background: rgba(0,0,0,0.05);
+    -webkit-box-shadow: 4px 3px 15px 0px rgba(50, 50, 50, 0.45);
+    -moz-box-shadow:    4px 3px 15px 0px rgba(50, 50, 50, 0.45);
+    box-shadow:         4px 3px 15px 0px rgba(50, 50, 50, 0.45);
+}
+
+li:nth-child(even) {
+    background: rgba(0,0,120, 0.1);
 }
 
 li {

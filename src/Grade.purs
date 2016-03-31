@@ -50,6 +50,11 @@ getScore (Weighted grades) = g (foldl f (Tuple 0.0 0.0) grades)
     g (Tuple weight score) =
         score / weight
 
+getWeights :: forall a. Score a -> Maybe (Array a)
+getWeights (Weighted grades) =
+    Just (map fst grades)
+getWeights _ =
+    Nothing
 
 average :: Array Number -> Number
 average fs = if l == 0 then 0.0 else sum fs / toNumber l
@@ -59,11 +64,11 @@ average fs = if l == 0 then 0.0 else sum fs / toNumber l
 type Grade = Score Number
 
 ex :: Grade
-ex = Average
-    [ Percent 1.0
-    , 12.0 `OutOf` 12.0
-    , Percent 1.0
-    , Average [ Percent 1.0, Percent 2.0 ]
+ex = Weighted
+    [ Tuple 20.0 (Percent 95.0)
+    , Tuple 20.0 (12.0 `OutOf` 12.0)
+    , Tuple 30.0 (Percent 88.0)
+    , Tuple 30.0 (Average [ Percent 100.0, Percent 95.0 ])
     ]
 
 emptyScore :: String -> Score String
@@ -82,4 +87,3 @@ scoreToLabel s =
          Percent _ -> "Percent"
          Average _ -> "Average"
          Weighted _ -> "Weighted"
-
