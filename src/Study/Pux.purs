@@ -30,6 +30,8 @@ updateGrade :: Action -> Score String -> Score String
 updateGrade AddGrade =
     overAverage (_ `Arr.snoc` Percent "1.0")
     .. overWeighted (_ `Arr.snoc` Tuple "1.0" (Percent "1.0")) 
+updateGrade (Child i Remove) =
+    overAverage (deleteAtMaybe i) .. overWeighted (deleteAtMaybe i)
 updateGrade (Child i a) =
     overAverage (modMaybe i (updateGrade a)) 
     .. overWeighted (modMaybe i (map (updateGrade a)))
@@ -37,6 +39,8 @@ updateGrade (UpdateScore s) =
     const s
 updateGrade (UpdateWeight i n) =
     overWeighted (modMaybe i (lmap (const n)))
+updateGrade Remove =
+    id
 updateGrade Undo = id
 updateGrade Redo = id
 

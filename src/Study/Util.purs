@@ -13,6 +13,9 @@ import Data.List.Zipper (Zipper(Zipper))
 modMaybe :: forall a. Int -> (a -> a) -> Array a -> Array a
 modMaybe i f xs = fromMaybe xs (Arr.modifyAt i f xs)
 
+deleteAtMaybe :: forall a. Int -> Array a -> Array a
+deleteAtMaybe i xs = fromMaybe xs (Arr.deleteAt i xs)
+
 mapIndexed :: forall a b. (Int -> a -> b) -> Array a -> Array b
 mapIndexed f xs = map (uncurry f) (Arr.zip (Arr.range 0 (Arr.length xs)) xs)
 

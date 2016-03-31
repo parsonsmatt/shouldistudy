@@ -27,6 +27,7 @@ data Action
     = Child Int Action
     | UpdateWeight Int String
     | UpdateScore (Score String)
+    | Remove
     | AddGrade
     | Undo
     | Redo
@@ -135,6 +136,7 @@ gradeEdit g attrs elem =
             div attrs elem
         divXs 4 # do
             changeType g
+            button' "Remove" \_ -> Remove
 
 baseDiv :: forall a. Array (Attribute a) -> Array (Html a) -> Html a
 baseDiv attrs elems =
