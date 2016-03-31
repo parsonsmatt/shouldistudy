@@ -10,6 +10,7 @@ import Pux.Html hiding (style, map)
 import Pux.Html.Attributes hiding (label)
 import Pux.Html.Events (onChange, onClick)
 
+import Study.Pux.Undo as Undo
 import Grade
 import Study.Util
 import Data.TreeZipper
@@ -33,21 +34,13 @@ data Action
     | UpdateScore (Score String)
     | Remove
     | AddGrade
-    | Undo
-    | Redo
     | ZoomIn
     | ZoomOut
 
-view :: State -> Html Action
-view t = div # do
+view :: State -> Html (Undo.Action Action)
+view t = Undo.view $ div # do
     button' "Zoom Out" \_ -> ZoomOut
     (viewGrade .. extractTree .. getTree .. extract $ t)
-
-undoRedo :: Html Action
-undoRedo =
-    div ! className "col-xs-6 text-center" # do
-        button' "Undo" \_ -> Undo
-        button' "Redo" \_ -> Redo
 
 div' :: forall a. BSColSize -> Int -> Array (Attribute a) -> Array (Html a) -> Html a
 div' b i attrs elems =
@@ -58,7 +51,7 @@ actionDiv :: Score String -> Html Action
 actionDiv g = div ! className "row" # do
     div' Xs 6 # do
         div ! className "text-center" # do
-            undoRedo
+            text "no more undo here"
     div' Xs 6 # do
         changeType g
 
@@ -143,7 +136,6 @@ setHeader gr =
             h2 # text "Grade Set"
             button' "Add Grade" \_ -> AddGrade
             button' "Remove" \_ -> Remove
-            undoRedo
         div' Sm 4 # do
             div ! className "container-fluid" # do
                 div ! className "row alert alert-info text-center" # do

@@ -1,6 +1,6 @@
 module Study.Pux where
 
-import Batteries hiding ((#), State, view)
+import Batteries hiding ((#), State, view, attempt)
 import Data.Array as Arr
 import Data.List (List(Nil), (:))
 import Data.Bifunctor
@@ -18,18 +18,17 @@ import Signal.Channel (CHANNEL)
 import Global as G
 
 import Data.TreeZipper as TZ
+import Study.Pux.Undo as Undo
 import Study.Pux.UI
 import Grade
 import Study.Util
 
-update :: Action -> State -> State
-update Redo state = fromMaybe state $ down state
-update Undo state = fromMaybe state $ up state
-update act state = editToPast (updateZoom act) state
+update :: Undo.Action Action -> State -> State
+update = Undo.update updateZoom
 
 updateZoom :: Action -> TZ.TreeZipper (Score String) -> TZ.TreeZipper (Score String)
-updateZoom (Child i ZoomIn) = idempotent (TZ.down i)
-updateZoom ZoomOut = idempotent TZ.up
+updateZoom (Child i ZoomIn) = attempt (TZ.down i)
+updateZoom ZoomOut = attempt TZ.up
 updateZoom a = TZ.editFocus (updateGrade a)
 
 updateGrade :: Action -> Score String -> Score String
@@ -49,8 +48,6 @@ updateGrade Remove =
     id
 updateGrade ZoomIn = id
 updateGrade ZoomOut = id
-updateGrade Undo = id
-updateGrade Redo = id
 
 initialState :: State
 initialState = Zipper Nil (TZ.singleton (map show ex)) Nil

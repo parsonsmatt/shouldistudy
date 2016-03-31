@@ -29,8 +29,8 @@ forEach = flip map
 -- Maybe Functions --
 ---------------------
 
-idempotent :: forall a. (a -> Maybe a) -> a -> a
-idempotent f a = fromMaybe a (f a)
+attempt :: forall a. (a -> Maybe a) -> a -> a
+attempt f a = fromMaybe a (f a)
 
 ---------------------------
 -- List Zipper Functions --
@@ -48,10 +48,10 @@ editFocus :: forall a. (a -> a) -> Zipper a -> Zipper a
 editFocus g (Zipper p a f) = Zipper p (g a) f
 
 idUp :: forall a. Zipper a -> Zipper a
-idUp = idempotent up
+idUp = attempt up
 
 idDown :: forall a. Zipper a -> Zipper a
-idDown = idempotent down
+idDown = attempt down
 
 ------------------------------
 -- Event Handling Functions --
