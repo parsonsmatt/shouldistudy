@@ -12,9 +12,10 @@ import Pux.Html.Events (onChange, onClick)
 
 import Grade
 import Study.Util
+import Data.TreeZipper
 
 type EditHistory = Zipper
-type ZoomLevel = Zipper
+type ZoomLevel = TreeZipper
 
 type State = EditHistory (ZoomLevel (Score String))
 
@@ -34,11 +35,13 @@ data Action
     | AddGrade
     | Undo
     | Redo
-    | ZoomIn Int
+    | ZoomIn
     | ZoomOut
 
 view :: State -> Html Action
-view = viewGrade .. extract .. extract
+view t = div # do
+    button' "Zoom Out" \_ -> ZoomOut
+    (viewGrade .. extractTree .. getTree .. extract $ t)
 
 undoRedo :: Html Action
 undoRedo =
@@ -51,19 +54,18 @@ div' b i attrs elems =
     div ([className (intercalate "-" ["col", show b, show i])] <> attrs)
         elems
 
-divXs :: forall a. Int -> Array (Attribute a) -> Array (Html a) -> Html a
-divXs = div' Xs
-
 actionDiv :: Score String -> Html Action
 actionDiv g = div ! className "row" # do
-    divXs 6 # do
+    div' Xs 6 # do
         div ! className "text-center" # do
             undoRedo
-    divXs 6 # do
+    div' Xs 6 # do
         changeType g
 
 button' :: String -> (_ -> Action) -> Html Action
 button' t a = button ! onClick a ! className "btn btn-default" # text t
+
+zoomIn i = button' "Focus" \_ -> ZoomIn
 
 viewGrade :: Score String -> Html Action
 viewGrade g@(Weighted grades) = baseDiv # do
@@ -88,13 +90,16 @@ viewGrade g@(Weighted grades) = baseDiv # do
                                    ! className "form-control"
                                    ## []
                        div' Xs 10 # do 
+                           zoomIn i
                            forwardTo (Child i) (viewGrade g)
                   
 viewGrade gr@(Average grades) = baseDiv # do
     setHeader gr
 
     ul ! className "list-unstyled" ## forEachIndexed grades \i g ->
-        li # forwardTo (Child i) (viewGrade g)
+        li # do
+            zoomIn i
+            forwardTo (Child i) (viewGrade g)
 
 viewGrade g@(OutOf a b) = baseDiv # do
     gradeEdit g ! className "container-fluid" # do
@@ -150,15 +155,15 @@ setHeader gr =
                                  .. getScore 
                                  .. Prelude.map G.readFloat 
                                  $ gr
-                    divXs 6 # do
+                    div' Xs 6 # do
                         changeType gr
 
 gradeEdit :: _
 gradeEdit g attrs elem = 
     div ! className "row" # do
-        divXs 6 # do
+        div' Xs 6 # do
             div attrs elem
-        divXs 6 # do
+        div' Xs 6 # do
             div ! className "text-center" # do
                 changeType g
                 button' "Remove" \_ -> Remove

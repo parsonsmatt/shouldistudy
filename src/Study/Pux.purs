@@ -17,6 +17,7 @@ import Pux.Html.Events as E
 import Signal.Channel (CHANNEL)
 import Global as G
 
+import Data.TreeZipper as TZ
 import Study.Pux.UI
 import Grade
 import Study.Util
@@ -26,10 +27,10 @@ update Redo state = fromMaybe state $ down state
 update Undo state = fromMaybe state $ up state
 update act state = editToPast (updateZoom act) state
 
-updateZoom :: Action -> Zipper (Score String) -> Zipper (Score String)
-updateZoom (ZoomIn i) = id
-updateZoom ZoomOut = idempotent up
-updateZoom a = editFocus (updateGrade a)
+updateZoom :: Action -> TZ.TreeZipper (Score String) -> TZ.TreeZipper (Score String)
+updateZoom (Child i ZoomIn) = idempotent (TZ.down i)
+updateZoom ZoomOut = idempotent TZ.up
+updateZoom a = TZ.editFocus (updateGrade a)
 
 updateGrade :: Action -> Score String -> Score String
 updateGrade AddGrade =
@@ -46,13 +47,18 @@ updateGrade (UpdateWeight i n) =
     overWeighted (modMaybe i (lmap (const n)))
 updateGrade Remove =
     id
+updateGrade ZoomIn = id
+updateGrade ZoomOut = id
 updateGrade Undo = id
 updateGrade Redo = id
+
+initialState :: State
+initialState = Zipper Nil (TZ.singleton (map show ex)) Nil
 
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do
     app <- start
-        { initialState: Zipper Nil (Zipper Nil (map show ex) Nil) Nil
+        { initialState: initialState
         , update: fromSimple update
         , inputs: []
         , view: view
