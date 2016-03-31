@@ -17,7 +17,8 @@
     "purescript-pux": "^2.0.1",
     "purescript-globals": "^0.2.2",
     "purescript-list-zipper": "https://github.com/DavidHarrison/purescript-list-zipper.git#889f1e",
-    "purescript-debug": "^0.1.3"
+    "purescript-debug": "^0.1.3",
+    "purescript-trees": "https://github.com/jplatte/purescript-trees.git#master"
   },
   "resolutions": {
     "purescript-maps": "~0.5.4",

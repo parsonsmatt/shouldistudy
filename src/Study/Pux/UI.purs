@@ -1,8 +1,7 @@
 module Study.Pux.UI where
 
-import Batteries (class Show, class Functor, map, (..), fst, show, ($), (<>), extract, Tuple(Tuple), for, sum)
+import Batteries (class Show, Tuple(Tuple), (..), ($), show, fst, map, sum, (<>), extract)
 
-import Data.Maybe (Maybe(Just, Nothing))
 import Data.Foldable (intercalate)
 import Data.List.Zipper (Zipper(Zipper))
 import Global as G
@@ -14,7 +13,10 @@ import Pux.Html.Events (onChange, onClick)
 import Grade
 import Study.Util
 
-type State = Zipper (Score String)
+type EditHistory = Zipper
+type ZoomLevel = Zipper
+
+type State = EditHistory (ZoomLevel (Score String))
 
 data BSColSize = Xs | Sm | Md | Lg
 
@@ -32,9 +34,11 @@ data Action
     | AddGrade
     | Undo
     | Redo
+    | ZoomIn Int
+    | ZoomOut
 
 view :: State -> Html Action
-view = viewGrade .. extract
+view = viewGrade .. extract .. extract
 
 undoRedo :: Html Action
 undoRedo =

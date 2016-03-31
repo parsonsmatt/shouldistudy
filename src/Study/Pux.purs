@@ -24,7 +24,12 @@ import Study.Util
 update :: Action -> State -> State
 update Redo state = fromMaybe state $ down state
 update Undo state = fromMaybe state $ up state
-update act state = editToPast (updateGrade act) state
+update act state = editToPast (updateZoom act) state
+
+updateZoom :: Action -> Zipper (Score String) -> Zipper (Score String)
+updateZoom (ZoomIn i) = id
+updateZoom ZoomOut = idempotent up
+updateZoom a = editFocus (updateGrade a)
 
 updateGrade :: Action -> Score String -> Score String
 updateGrade AddGrade =
@@ -47,7 +52,7 @@ updateGrade Redo = id
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do
     app <- start
-        { initialState: Zipper Nil (map show ex) Nil
+        { initialState: Zipper Nil (Zipper Nil (map show ex) Nil) Nil
         , update: fromSimple update
         , inputs: []
         , view: view

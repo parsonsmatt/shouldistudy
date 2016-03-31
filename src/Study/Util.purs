@@ -5,7 +5,7 @@ import Batteries
 import Global as G
 import Data.Array as Arr
 import Data.List ((:))
-import Data.List.Zipper (Zipper(Zipper))
+import Data.List.Zipper 
 
 ---------------------
 -- Array Functions --
@@ -25,6 +25,13 @@ forEachIndexed = flip mapIndexed
 forEach :: forall f a b. (Functor f) => f a -> (a -> b) -> f b
 forEach = flip map
 
+---------------------
+-- Maybe Functions --
+---------------------
+
+idempotent :: forall a. (a -> Maybe a) -> a -> a
+idempotent f a = fromMaybe a (f a)
+
 ---------------------------
 -- List Zipper Functions --
 ---------------------------
@@ -39,6 +46,12 @@ editToPast g (Zipper p a f) = Zipper (a : p) (g a) f
 
 editFocus :: forall a. (a -> a) -> Zipper a -> Zipper a
 editFocus g (Zipper p a f) = Zipper p (g a) f
+
+idUp :: forall a. Zipper a -> Zipper a
+idUp = idempotent up
+
+idDown :: forall a. Zipper a -> Zipper a
+idDown = idempotent down
 
 ------------------------------
 -- Event Handling Functions --
