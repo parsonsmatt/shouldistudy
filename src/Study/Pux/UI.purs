@@ -3,7 +3,6 @@ module Study.Pux.UI where
 import Batteries (class Show, Tuple(Tuple), (..), ($), show, fst, map, sum, (<>), extract)
 
 import Data.Foldable (intercalate)
-import Data.List.Zipper (Zipper(Zipper))
 import Global as G
 
 import Pux.Html hiding (style, map)
@@ -13,12 +12,11 @@ import Pux.Html.Events (onChange, onClick)
 import Study.Pux.Undo as Undo
 import Grade
 import Study.Util
-import Data.TreeZipper
+import Data.TreeZipper (TreeZipper, getTree, extractTree)
 
-type EditHistory = Zipper
 type ZoomLevel = TreeZipper
 
-type State = EditHistory (ZoomLevel (Score String))
+type State = Undo.History (ZoomLevel (Score String))
 
 data BSColSize = Xs | Sm | Md | Lg
 
