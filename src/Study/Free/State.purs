@@ -1,4 +1,4 @@
-module Study.FreeState where
+module Study.Free.State where
 
 import Prelude
 
