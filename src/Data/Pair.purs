@@ -1,9 +1,9 @@
 module Data.Pair where
 
 import Prelude
-import Data.Monoid
-import Data.Foldable
-import Data.Traversable
+import Data.Monoid (class Monoid, mempty)
+import Data.Foldable (class Foldable)
+import Data.Traversable (class Traversable, sequenceDefault)
 
 data Pair a = Pair a a
 

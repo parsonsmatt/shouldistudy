@@ -41,6 +41,27 @@ down i (TreeZipper t past) =
          View a subtrees ->
              TreeZipper <$> index subtrees i <*> pure (Tuple i t : past)
 
+leftBy :: forall a. Int -> TreeZipper a -> Maybe (TreeZipper a)
+leftBy _ (TreeZipper _ Nil) =
+    Nothing
+leftBy n tz@(TreeZipper t (Cons (Tuple i past) rest)) =
+    up tz >>= down (i + n)
+
+left :: forall a. TreeZipper a -> Maybe (TreeZipper a)
+left = leftBy 1
+
+rightBy :: forall a. Int -> TreeZipper a -> Maybe (TreeZipper a)
+rightBy _ (TreeZipper _ Nil) =
+    Nothing
+rightBy n tz@(TreeZipper t (Cons (Tuple i past) rest)) =
+    up tz >>= down (i - n)
+
+right :: forall a. TreeZipper a -> Maybe (TreeZipper a)
+right = rightBy 1
+
+sibling :: forall a. Int -> TreeZipper a -> Maybe (TreeZipper a)
+sibling n tz = up tz >>= down n
+
 editTree :: forall a. (Tree a -> Tree a) -> TreeZipper a -> TreeZipper a
 editTree f (TreeZipper t p) = TreeZipper (f t) p
 
