@@ -2,13 +2,12 @@ module Study.FreeState where
 
 import Prelude
 
-import Data.Tuple
+import Data.Tuple (Tuple(Tuple))
 
-import Data.Functor.Compose
-import Data.Identity
-import Data.Functor.Coproduct
-import Data.Tree
-import Data.Pair
+import Data.Functor.Compose (Compose(Compose))
+import Data.Identity (Identity(Identity))
+import Data.Functor.Coproduct (Coproduct, left, right)
+import Data.Pair (Pair(Pair))
 
 data Free f a
     = Pure a
@@ -18,9 +17,6 @@ infixr 9 compose as ..
 
 type OneOrTwo = Coproduct Pair Identity
 
-type Grades =
-    Free (Compose Array OneOrTwo)
-
 type ArrayOf = Compose Array
 
 type Labelled l = Compose (Tuple l)
@@ -28,47 +24,31 @@ type Labelled l = Compose (Tuple l)
 label :: forall l f a. l -> f a -> Labelled l f a
 label l f = Compose (Tuple l f)
 
-type GradesWithWeight w =
-    Free (Compose (Labelled w Array) OneOrTwo)
-
-type GradesWithName s =
+type LabelledGrades s =
     Free (ArrayOf (Labelled s OneOrTwo))
 
-gwn :: Int -> GradesWithName String Int
-gwn 0 = wrap [label "hello" (oneF 1)]
-gwn 1 = wrap [label "hi" (twoF 1 2)]
-gwn 2 =
-    wrap 
-        [ label "Exams" (two (pure 1) exams)
-        , label "Homework" (one homework)
-        , label "Projects" (twoF 2 [ label "asdf" $ oneF 1.0])
-        ]
+type Grades = LabelledGrades String
 
-exams :: GradesWithName String Int
-exams = wrap [ label "Exam 1" (oneF 100)
-             , label "Exam 2" (oneF 95)
-             ]
+grades :: forall f g a. f (g (Free (Compose f g) a)) -> Free (Compose f g) a
+grades = wrap
 
-gradeSet = wrap
+percent :: forall f a. a -> Coproduct Pair Identity (Free f a)
+percent = oneF
 
-homework :: GradesWithName String Int
-homework =
-    wrap
-        [ label "Thing" (oneF 80)
-        , label "what" (oneF 90)
-        ]
+oneOf :: forall f a. a -> a -> Coproduct Pair Identity (Free f a)
+oneOf = twoF
 
-wrap :: forall a g f. f (g a) -> Free (Compose f g) a
+wrap :: forall f g a. f (g (Free (Compose f g) a)) -> Free (Compose f g) a
 wrap = Free .. Compose
 
 one :: forall a. a -> OneOrTwo a
 one = right .. Identity
 
-oneF :: forall a f. a -> Coproduct Pair Identity (Free f a)
+oneF :: forall f a. a -> Coproduct Pair Identity (Free f a)
 oneF = one .. Pure
 
 two :: forall a. a -> a -> OneOrTwo a
 two a b = left (Pair a b)
 
-twoF :: forall a f. a -> a -> OneOrTwo (Free f a)
+twoF :: forall f a. a -> a -> OneOrTwo (Free f a)
 twoF a b = map Pure (two a b)

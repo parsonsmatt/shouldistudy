@@ -1,12 +1,12 @@
-module Data.TreeZipper where
+module Data.Tree.Zipper where
 
 import Prelude
 
-import Data.Array hiding ((:))
-import Data.Maybe
-import Data.Tree
-import Data.List hiding (index)
-import Data.Tuple
+import Data.Array (index)
+import Data.Maybe (Maybe(Just, Nothing))
+import Data.Tree (Tree, View(View), into, out)
+import Data.List (List(Nil, Cons), (:))
+import Data.Tuple (Tuple(Tuple))
 
 type Past a 
     = List (Tuple Int (Tree a))
