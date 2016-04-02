@@ -12,7 +12,7 @@ import Pux.Html.Events (onChange, onClick)
 import Study.Pux.Undo as Undo
 import Grade
 import Study.Util
-import Data.TreeZipper (TreeZipper, getTree, extractTree)
+import Data.Tree.Zipper (TreeZipper, getTree, extractTree)
 
 type ZoomLevel = TreeZipper
 
@@ -36,7 +36,7 @@ data Action
     | ZoomOut
 
 view :: State -> Html (Undo.Action Action)
-view t = Undo.view $ div # do
+view t = Undo.simpleView $ div # do
     button' "Zoom Out" \_ -> ZoomOut
     (viewGrade .. extractTree .. getTree .. extract $ t)
 

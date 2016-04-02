@@ -5,6 +5,8 @@ import Prelude
 import Data.Maybe (Maybe, fromMaybe)
 import Data.List ((:))
 import Pux.Html as H
+import Pux.Html (Html, (#))
+import Pux.Html (Attribute)
 import Pux.Html.Events as E
 import Data.List.Zipper (Zipper(Zipper), up, down)
 
@@ -26,9 +28,20 @@ update f Redo     = attempt down
 update f Undo     = attempt up
 update f (Next n) = editToPast (f n)
 
-view :: forall n. H.Html n -> H.Html (Action n)
-view c = 
-     H.div [] [ H.button [E.onClick (\_ -> Undo)] [H.text "Undo"]
-              , H.button [E.onClick (\_ -> Redo)] [H.text "Redo"]
-              , H.forwardTo Next c
-              ]
+simpleView :: forall n. Html n -> Html (Action n)
+simpleView =
+    view \undo redo c ->
+        H.div [] [ undo # H.text "Undo", redo # H.text "Redo", c ]
+
+btn :: forall n. Action n -> Array (Attribute (Action n)) -> Array (Html (Action n)) -> Html (Action n)
+btn act attrs elems = H.button (attrs <> [E.onClick (const act)]) elems
+
+undoButton :: forall n. Array (Attribute (Action n)) -> Array (Html (Action n)) -> Html (Action n)
+undoButton = btn Undo
+
+redoButton :: forall n. Array (Attribute (Action n)) -> Array (Html (Action n)) -> Html (Action n)
+redoButton = btn Redo
+
+
+view :: forall r n. ((Array (Attribute (Action n)) -> Array (Html (Action n)) -> Html (Action n)) -> (Array (Attribute (Action n)) -> Array (Html (Action n)) -> Html (Action n)) -> Html (Action n) -> r) -> Html n -> r
+view k = k undoButton redoButton <<< H.forwardTo Next

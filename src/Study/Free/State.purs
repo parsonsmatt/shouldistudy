@@ -22,79 +22,66 @@ type OneOrTwo = Coproduct Pair Identity
 
 type ArrayOf = Compose Array
 
-type Labelled l = Compose (Tuple l)
+type Labelled = Tuple String
 
-label :: forall l f a. l -> f a -> Labelled l f a
-label l f = Compose (Tuple l f)
+-- This type very nearly gets us what we want! We've recovered Percent, OutOf
+-- and Average from the original data constructor. We don't have Weighted,
+-- yet.
+asdf :: Int -> Free (ArrayOf Labelled) (OneOrTwo Int)
+asdf 0 =
+    wrap
+        [ "What" :* pct 2
+        , "Hey" :* 2 </> 3
+        , "A set" :* wrap
+            [ "Cool" :* one 2
+            , "Yess" :* two 4 5
+            ]
+        ]
 
-type LabelledGrades s =
-    Free (ArrayOf (Labelled s OneOrTwo))
+percent = one
+pct = one
+outOf = two
 
-type Verbose l = Free (Compose Array (Compose (Tuple l) (Coproduct Pair Identity)))
+infix 3 outOf as </>
+one = Pure <<< right <<< Identity
+two a = Pure <<< left <<< Pair a
 
-type Grades = LabelledGrades String
+single = right <<< Identity
+infixr 0 Tuple as :*
 
-data GradeView l a
-    = Percent l a
-    | OutOf l a a
-    | Weighted l (Array (Tuple a (GradeView l a)))
-    | Average l (Array (GradeView l a))
-
--- view :: forall a l. LabelledGrades l a -> GradeView l a
--- view (Free (Compose arr)) =  
-
-grades :: forall f g a. f (g (Free (Compose f g) a)) -> Free (Compose f g) a
-grades = wrap
-
-percent :: forall f a. a -> Coproduct Pair Identity (Free f a)
-percent = oneF
-
-oneOf :: forall f a. a -> a -> Coproduct Pair Identity (Free f a)
-oneOf = twoF
-
-wrap :: forall f g a. f (g (Free (Compose f g) a)) -> Free (Compose f g) a
 wrap = Free .. Compose
 
-one :: forall a. a -> OneOrTwo a
-one = right .. Identity
+-- we obviously just need another coproduct:
+type Score a =
+    Free
+        ( Coproduct 
+            ( ArrayOf Labelled ) 
+            ( ArrayOf ( Compose (Tuple a) Labelled )
+            )
+        ) 
+        (OneOrTwo a)
 
-oneF :: forall f a. a -> Coproduct Pair Identity (Free f a)
-oneF = one .. Pure
+average
+    :: forall a
+     . Array (Labelled (Score a))
+    -> Score a
+average = Free .. left .. Compose
 
-two :: forall a. a -> a -> OneOrTwo a
-two a b = left (Pair a b)
+weights :: forall a. Array (Tuple a (Labelled (Score a)))
+        -> Score a
+weights = Free .. right .. Compose .. map Compose
 
-twoF :: forall f a. a -> a -> OneOrTwo (Free f a)
-twoF a b = map Pure (two a b)
+-- alright i like this a lot
+qwer :: Int -> Score Int
+qwer 0 =
+    average 
+        [ "Hello" :* pct 2
+        , "Outof" :* 10 </> 12
+        , "Nested" :* average []
+        , "Weighted" :* weights
+            [ 2 :* "Hey" :* pct 3
+            , 3 :* "Yo" :* average []
+            ]
+        ]
 
-data GradeZipper a
-    = GradeZipper (Grades a) (Past a)
 
-type Past a =
-    List (Tuple Int (Grades a))
-
-getGrades (GradeZipper g _) = g
-getPast (GradeZipper _ p) = p
-
-up :: forall a. GradeZipper a -> Maybe (GradeZipper a)
-up (GradeZipper _ Nil) =
-    Nothing
-up (GradeZipper _ (Cons (Tuple _ oldTree) past)) =
-    Just (GradeZipper oldTree past)
-
-down :: forall a. Int -> GradeZipper a -> Maybe (GradeZipper a)
-down n (GradeZipper g past) =
-    case g of
-         Free (Compose subtrees) -> do
-             subtree <- index subtrees n
-             case decompose subtree of
-                  Tuple l (Coproduct e) ->
-                      case e of
-                           Left (Pair _ f@(Free _)) ->
-                               Just (GradeZipper f (Tuple n g : past))
-                           Right (Identity f@(Free _)) ->
-                               Just (GradeZipper f (Tuple n g : past))
-                           _ ->
-                               Nothing
-         Pure _ ->
-             Nothing

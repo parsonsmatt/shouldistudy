@@ -17,7 +17,7 @@ import Pux.Html.Events as E
 import Signal.Channel (CHANNEL)
 import Global as G
 
-import Data.TreeZipper as TZ
+import Data.Tree.Zipper as TZ
 import Study.Pux.Undo as Undo
 import Study.Pux.UI
 import Grade
