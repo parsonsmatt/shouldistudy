@@ -18,7 +18,7 @@ import Signal.Channel (CHANNEL)
 import Global as G
 
 import Data.Tree.Zipper as TZ
-import Study.Pux.Undo as Undo
+import Pux.Undo as Undo
 import Study.Pux.UI
 import Grade
 import Study.Util

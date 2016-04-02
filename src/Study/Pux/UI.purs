@@ -9,7 +9,7 @@ import Pux.Html hiding (style, map)
 import Pux.Html.Attributes hiding (label)
 import Pux.Html.Events (onChange, onClick)
 
-import Study.Pux.Undo as Undo
+import Pux.Undo as Undo
 import Grade
 import Study.Util
 import Data.Tree.Zipper (TreeZipper, getTree, extractTree)
@@ -36,9 +36,9 @@ data Action
     | ZoomOut
 
 view :: State -> Html (Undo.Action Action)
-view t = Undo.simpleView $ div # do
+view = Undo.simpleView \t -> div # do
     button' "Zoom Out" \_ -> ZoomOut
-    (viewGrade .. extractTree .. getTree .. extract $ t)
+    (viewGrade t)
 
 div' :: forall a. BSColSize -> Int -> Array (Attribute a) -> Array (Html a) -> Html a
 div' b i attrs elems =

@@ -22,7 +22,8 @@
     "purescript-functor-compose": "^0.0.1",
     "purescript-free": "^0.9",
     "purescript-coproducts": "^0.4.1",
-    "purescript-identity": "^0.4.1"
+    "purescript-identity": "^0.4.1",
+    "purescript-pux-undo": "^0.1.0"
   },
   "resolutions": {
     "purescript-maps": "~0.5.4",
