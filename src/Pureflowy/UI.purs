@@ -22,5 +22,8 @@ view state = div # do
 render :: T.View T.Tree String -> Html Action
 render (T.View item children) =
     ul # do
-        li # text item
-        ul ## Util.forEachIndexed children \i c -> li # render (T.out c)
+        li # do
+            button ! onClick (\_ -> Add) # text "Add"
+            text item
+        ul ## Util.forEachIndexed children \i c ->
+            forwardTo (Child i) (li # render (T.out c))
