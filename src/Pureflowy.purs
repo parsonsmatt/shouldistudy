@@ -15,7 +15,6 @@ import Pux.Html ((#), (##), (!))
 import Pux.Html.Attributes as A
 import Pux.Html.Events as E
 import Signal.Channel (CHANNEL)
-import Global as G
 
 import Data.Tree.Zipper as TZ
 import Pux.Undo as Undo
@@ -26,10 +25,10 @@ import Pureflowy.UI
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do
     app <- start
-        { initialState: initialState
-        , update: fromSimple update
+        { initialState: { past: Nil, current: initialState }
+        , update: fromSimple updateZoom
         , inputs: []
-        , view: view
+        , view: zoomView
         }
 
     renderToDOM "#app" app.html
