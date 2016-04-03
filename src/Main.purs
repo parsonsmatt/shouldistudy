@@ -3,8 +3,9 @@ module Main where
 import Batteries
 
 import Control.Monad.Eff (Eff)
+import Signal.Channel (CHANNEL)
 
 import Study.Pux as Pux
 
-main :: Eff _ Unit
+main :: forall eff. Eff (err :: EXCEPTION, channel :: CHANNEL | eff) Unit
 main = Pux.ui

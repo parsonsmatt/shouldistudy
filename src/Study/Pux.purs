@@ -1,30 +1,20 @@
 module Study.Pux where
 
-import Batteries hiding ((#), State, view, attempt)
+import Batteries
 import Data.Array as Arr
-import Data.List (List(Nil), (:))
-import Data.Bifunctor
-import Debug.Trace as Trace
-
-import Data.List.Zipper (Zipper(Zipper), up, down)
+import Data.Bifunctor (lmap)
 
 import Pux (renderToDOM, fromSimple, start)
-import Pux.Html (Html)
-import Pux.Html as H
-import Pux.Html ((#), (##), (!))
-import Pux.Html.Attributes as A
-import Pux.Html.Events as E
 import Signal.Channel (CHANNEL)
-import Global as G
 
 import Data.Tree.Zipper as TZ
 import Pux.Undo as Undo
-import Study.Pux.UI
-import Grade
-import Study.Util
+import Study.Pux.UI (State, Action(..), view)
+import Grade (Score(Percent), ex, overWeighted, overAverage)
+import Study.Util (modMaybe, deleteAtMaybe, attempt)
 
 update :: Undo.Action Action -> State -> State
-update = Undo.update updateZoom
+update = Undo.update updateGrade
 
 updateZoom :: Action -> TZ.TreeZipper (Score String) -> TZ.TreeZipper (Score String)
 updateZoom (Child i ZoomIn) = attempt (TZ.down i)
@@ -50,7 +40,7 @@ updateGrade ZoomIn = id
 updateGrade ZoomOut = id
 
 initialState :: State
-initialState = Zipper Nil (TZ.singleton (map show ex)) Nil
+initialState = Undo.initialState (map show ex)
 
 ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
 ui = do

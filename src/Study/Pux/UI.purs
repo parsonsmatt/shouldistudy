@@ -1,6 +1,6 @@
 module Study.Pux.UI where
 
-import Batteries (class Show, Tuple(Tuple), (..), ($), show, fst, map, sum, (<>), extract)
+import Batteries (Tuple(Tuple), (..), ($), show, fst, map, sum, (<>))
 
 import Data.Foldable (intercalate)
 import Global as G
@@ -9,22 +9,12 @@ import Pux.Html hiding (style, map)
 import Pux.Html.Attributes hiding (label)
 import Pux.Html.Events (onChange, onClick)
 
+import Pux.Bootstrap (ColSize(..))
 import Pux.Undo as Undo
 import Grade
 import Study.Util
-import Data.Tree.Zipper (TreeZipper, getTree, extractTree)
 
-type ZoomLevel = TreeZipper
-
-type State = Undo.History (ZoomLevel (Score String))
-
-data BSColSize = Xs | Sm | Md | Lg
-
-instance showBSColSize :: Show BSColSize where
-    show Xs = "xs"
-    show Sm = "sm"
-    show Md = "md"
-    show Lg = "lg"
+type State = Undo.History (Score String)
 
 data Action
     = Child Int Action
@@ -36,11 +26,11 @@ data Action
     | ZoomOut
 
 view :: State -> Html (Undo.Action Action)
-view = Undo.simpleView \t -> div # do
+view = Undo.simpleView $ \t -> div # do
     button' "Zoom Out" \_ -> ZoomOut
-    (viewGrade t)
+    viewGrade t
 
-div' :: forall a. BSColSize -> Int -> Array (Attribute a) -> Array (Html a) -> Html a
+div' :: forall a. ColSize -> Int -> Array (Attribute a) -> Array (Html a) -> Html a
 div' b i attrs elems =
     div ([className (intercalate "-" ["col", show b, show i])] <> attrs)
         elems
