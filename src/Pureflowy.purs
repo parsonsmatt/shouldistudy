@@ -20,17 +20,17 @@ import Global as G
 import Data.Tree.Zipper as TZ
 import Pux.Undo as Undo
 
-import Pureflowy.State (State)
+import Pureflowy.State
 import Pureflowy.UI
 
--- ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
--- ui = do
---     app <- start
---         { initialState: initialState
---         , update: fromSimple update
---         , inputs: []
---         , view: view
---         }
--- 
---     renderToDOM "#app" app.html
--- 
+ui :: forall e. Eff ( err :: EXCEPTION , channel :: CHANNEL | e ) Unit
+ui = do
+    app <- start
+        { initialState: initialState
+        , update: fromSimple update
+        , inputs: []
+        , view: view
+        }
+
+    renderToDOM "#app" app.html
+
