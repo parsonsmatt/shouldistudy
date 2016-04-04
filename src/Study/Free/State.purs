@@ -2,10 +2,8 @@ module Study.Free.State where
 
 import Prelude
 
-import Data.Array (index)
 import Data.List
 import Data.Maybe
-import Data.Either
 import Data.Functor.Compose     (Compose(Compose), decompose)
 import Data.Functor.Coproduct   (Coproduct(..), left, right)
 import Data.Identity            (Identity(Identity))
