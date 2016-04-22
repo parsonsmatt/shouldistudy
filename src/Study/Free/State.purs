@@ -16,7 +16,14 @@ data Free f a
 
 infixr 9 compose as ..
 
-type OneOrTwo = Coproduct Pair Identity
+data Product f g a = Product (f a) (g a)
+
+infixr 9 type Compose as :.:
+infixr 5 type Coproduct as :+:
+infixr 6 type Product as :*:
+
+
+type OneOrTwo = Pair :+: Identity
 
 type ArrayOf = Compose Array
 
@@ -51,12 +58,8 @@ wrap = Free .. Compose
 
 -- we obviously just need another coproduct:
 type Score a =
-    Free
-        ( Coproduct 
-            ( ArrayOf Labelled ) 
-            ( ArrayOf ( Compose (Tuple a) Labelled )
-            )
-        ) 
+    Free 
+        (Array :.: (Tuple String) :+: (Array :.: ((Tuple a) :.: (Tuple String))))
         (OneOrTwo a)
 
 average

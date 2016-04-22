@@ -30,6 +30,8 @@
     "purescript-maps": "~0.5.4",
     "purescript-strings": "~0.7.1",
     "purescript-canvas": "^0.4.0",
-    "purescript-aff": "^0.16.1"
+    "purescript-aff": "^0.16.1",
+    "purescript-math": "~1.0.0",
+    "purescript-proxy": "~1.0.0"
   }
 }
